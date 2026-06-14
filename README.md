@@ -6,13 +6,13 @@
 
 ## 📦 这是什么
 
-这是一个 **Skills monorepo**，遵循 [Vercel Labs Skills](https://skills.sh) 规范，可通过 `npx skills` 安装。
+这是一个遵循 [Vercel Labs Skills](https://skills.sh) 规范的 skill 仓库，可通过 `npx skills` 安装。
 
 ### 当前包含的 skill
 
 | 路径 | 安装命令 | 说明 |
 |------|----------|------|
-| `skills/code-refactor/` | `npx skills add weibaohui/skills/code-refactor` | 代码重构与整洁之道完整知识体系 |
+| `code-refactor/` | `npx skills add weibaohui/skills/code-refactor` | 代码重构与整洁之道完整知识体系 |
 
 ---
 
@@ -48,16 +48,15 @@ npx skills add weibaohui/skills/code-refactor
 ├── 📄 LICENSE
 ├── 📄 .gitignore
 │
-└── 📁 skills/
-    └── 📁 code-refactor/             ← 代码重构 skill
-        └── 📄 SKILL.md               ← 完整知识体系（核心文件）
-            │
-            ├── PART 1: PRINCIPLES        — 设计原则
-            ├── PART 2: CODE SMELLS       — 24 种代码坏味道
-            ├── PART 3: REFACTORING       — 70+ 重构手法
-            ├── PART 4: CODE QUALITY      — 代码质量规范
-            ├── PART 5: WHEN TO REFACTOR  — 重构时机决策
-            └── QUICK DECISION MATRIX     — 快速决策矩阵
+└── 📁 code-refactor/             ← 代码重构 skill
+    └── 📄 SKILL.md               ← 完整知识体系（核心文件）
+        │
+        ├── PART 1: PRINCIPLES        — 设计原则
+        ├── PART 2: CODE SMELLS       — 24 种代码坏味道
+        ├── PART 3: REFACTORING       — 70+ 重构手法
+        ├── PART 4: CODE QUALITY      — 代码质量规范
+        ├── PART 5: WHEN TO REFACTOR  — 重构时机决策
+        └── QUICK DECISION MATRIX     — 快速决策矩阵
 ```
 
 ---
