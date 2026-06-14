@@ -1,11 +1,11 @@
 ---
 name: refactoring-compass
-description: "Code refactoring & clean code knowledge system — distilled from Clean Code (Robert C. Martin) and Refactoring 2nd Edition (Martin Fowler). Covers 24 code smells, 70+ refactoring techniques, SOLID principles, code quality rules, and refactoring decision matrix."
+description: "代码重构与代码整洁知识体系 — 基于《代码整洁之道》(Clean Code) 与《重构: 改善既有代码设计 第二版》(Refactoring 2nd Edition) 提炼整合。涵盖 24 种代码坏味道、70+ 重构手法、SOLID 原则、代码质量规范、重构时机决策矩阵。Keywords: refactor, code smell, clean code, naming, function design, extract function, move function, encapsulate, simplify, guard clause, polymorphism, inheritance, SRP, DRY, DIP, OCP, TDD, unit test, error handling, null, exception, code review, 代码整洁, 重构, 命名, 函数, 注释, 格式, 错误处理, 测试, 类设计, 代码坏味道, 提炼函数, 搬移函数, 封装, 简化条件, 多态, 继承, 卫语句, 委托, 代码质量, 代码审查. Triggers on: refactor, code smell, clean code, extract, inline, move, encapsulate, simplify, naming, function, class, comment, error, test, SRP, DRY, polymorphism, delegate, guard clause, 提炼, 内联, 搬移, 封装, 简化, 命名规范, 函数设计, 坏味道, 重构建议, how to refactor, code quality, 代码质量, 代码整洁之道, 重构名录"
 version: "1.0.0"
 license: MIT
 metadata:
   author: weibaohui
-  tags: [refactoring, clean-code, code-quality, code-review, technical-debt]
+  tags: [refactoring, clean-code, code-quality, code-review, technical-debt, 重构, 代码整洁, 代码质量]
   docs-url: github.com/weibaohui/refactoring-compass
 
 # Code Refactoring Skill
