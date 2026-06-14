@@ -1,6 +1,18 @@
-# 🧭 Refactoring Compass · 代码重构指北
+# skills · 代码重构指北
 
 > **基于《代码整洁之道》(Clean Code, Robert C. Martin) 与《重构: 改善既有代码设计 第二版》(Refactoring 2nd Edition, Martin Fowler) 提炼总结的完整重构知识体系**
+
+---
+
+## 📦 这是什么
+
+这是一个 **Skills monorepo**，遵循 [Vercel Labs Skills](https://skills.sh) 规范，可通过 `npx skills` 安装。
+
+### 当前包含的 skill
+
+| 路径 | 安装命令 | 说明 |
+|------|----------|------|
+| `skills/coding-refact/` | `npx skills add weibaohui/skills/coding-refact` | 代码重构与整洁之道完整知识体系 |
 
 ---
 
@@ -17,38 +29,36 @@
 
 ---
 
-## 📋 内容结构
-
-```
-📁 refactoring-compass
-├── 📄 README.md                  ← 本文件
-├── 📄 SKILL.md                   ← 完整知识体系（核心文件）
-│
-│   ┣━━ PART 1: PRINCIPLES        ← 设计原则（简单设计四规则、SOLID、迪米特法则、CQS、不可变性、抽象）
-│   ┣━━ PART 2: CODE SMELLS       ← 24 种代码坏味道（命名、重复、函数、数据、结构、耦合、继承、注释）
-│   ┣━━ PART 3: REFACTORING       ← 70+ 重构手法（Ch6-Ch12，按章节组织）
-│   ┣━━ PART 4: CODE QUALITY      ← 代码质量规范（命名、函数、注释、格式、类、错误、边界、测试、系统、并发）
-│   ┣━━ PART 5: WHEN TO REFACTOR  ← 重构时机决策（为什么、何时、何时不、挑战、性能、YAGNI）
-│   ┗━━ QUICK DECISION MATRIX     ← 快速决策矩阵
-```
-
----
-
-## 🚀 快速使用
-
-### 通过 npx skills 安装
-
-直接使用 `npx` 零安装运行：
+## 🚀 安装
 
 ```bash
-npx skills add weibaohui/refactoring-compass
+# 安装 coding-refact skill
+npx skills add weibaohui/skills/coding-refact
 ```
 
 > 前提：需要 Node.js 18+。更多用法见 [skills.sh](https://skills.sh)。
 
-### 直接阅读
+---
 
-直接打开 [SKILL.md](./SKILL.md) 查阅完整知识体系。
+## 📁 目录结构
+
+```
+📁 skills
+├── 📄 README.md
+├── 📄 LICENSE
+├── 📄 .gitignore
+│
+└── 📁 skills/
+    └── 📁 coding-refact/             ← 代码重构 skill
+        └── 📄 SKILL.md               ← 完整知识体系（核心文件）
+            │
+            ├── PART 1: PRINCIPLES        — 设计原则
+            ├── PART 2: CODE SMELLS       — 24 种代码坏味道
+            ├── PART 3: REFACTORING       — 70+ 重构手法
+            ├── PART 4: CODE QUALITY      — 代码质量规范
+            ├── PART 5: WHEN TO REFACTOR  — 重构时机决策
+            └── QUICK DECISION MATRIX     — 快速决策矩阵
+```
 
 ---
 
@@ -119,4 +129,4 @@ MIT License — 欢迎自由使用、分享、改进。
 
 ---
 
-> 🧭 **Refactoring Compass** — 无论你是刚入行的新手还是经验丰富的架构师，愿这份知识体系成为你代码重构路上的指南针。
+> 🧭 无论你是刚入行的新手还是经验丰富的架构师，愿这份知识体系成为你代码重构路上的指南针。

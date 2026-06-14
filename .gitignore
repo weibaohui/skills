@@ -1,6 +1,10 @@
 # AtomCode local config
 .atomcode/
 
+# sx vault artifacts
+assets/
+sx.lock
+
 # OS files
 .DS_Store
 Thumbs.db
