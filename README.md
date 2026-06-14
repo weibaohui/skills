@@ -36,19 +36,23 @@
 
 ## 🚀 快速使用
 
-### 作为 AtomCode Skill
+### 方式一：通过 sx 安装（AtomCode / 团队治理）
 
-本项目设计为 [AtomCode](https://atomgit.com) 的 Skill（技能），可直接加载使用：
+本项目设计为团队 Vault 资产，通过 `sx` 管理：
 
 ```bash
-# 在 AtomCode 项目中引用
 sx install refactoring-compass
 ```
 
-Skill 会在以下场景自动触发：
-- **重构相关**: refactor、重构、提炼、内联、搬移、封装、简化条件、多态
-- **代码质量**: 命名规范、函数设计、代码整洁、代码坏味道、代码审查
-- **关键词**: SRP、DRY、DIP、OCP、TDD、guard clause、卫语句
+### 方式二：通过 npx skills 安装（Vercel Skills 生态）
+
+直接使用 `npx` 零安装运行：
+
+```bash
+npx skills add weibaohui/refactoring-compass
+```
+
+> 前提：需要 Node.js 18+。更多用法见 [skills.sh](https://skills.sh)。
 
 ### 直接阅读
 

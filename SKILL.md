@@ -1,7 +1,12 @@
 ---
-name: code-refactoring
-description: "Use for code quality, refactoring, and clean code practices. Combines Clean Code (Robert C. Martin) and Refactoring 2nd Edition (Martin Fowler). Keywords: refactor, code smell, clean code, naming, function design, extract function, move function, encapsulate, simplify, guard clause, polymorphism, inheritance, SRP, DRY, DIP, OCP, TDD, unit test, error handling, null, exception, code review, 代码整洁, 重构, 命名, 函数, 注释, 格式, 错误处理, 测试, 类设计, 代码坏味道, 提炼函数, 搬移函数, 封装, 简化条件, 多态, 继承, 卫语句, 委托, 代码质量, 代码审查. Triggers on: refactor, code smell, clean code, extract, inline, move, encapsulate, simplify, naming, function, class, comment, error, test, SRP, DRY, polymorphism, delegate, guard clause, 提炼, 内联, 搬移, 封装, 简化, 命名规范, 函数设计, 坏味道, 重构建议, how to refactor, code quality, 代码质量, 代码整洁之道, 重构名录"
----
+name: refactoring-compass
+description: "Code refactoring & clean code knowledge system — distilled from Clean Code (Robert C. Martin) and Refactoring 2nd Edition (Martin Fowler). Covers 24 code smells, 70+ refactoring techniques, SOLID principles, code quality rules, and refactoring decision matrix."
+version: "1.0.0"
+license: MIT
+metadata:
+  author: weibaohui
+  tags: [refactoring, clean-code, code-quality, code-review, technical-debt]
+  docs-url: github.com/weibaohui/refactoring-compass
 
 # Code Refactoring Skill
 
