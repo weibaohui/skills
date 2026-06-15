@@ -1,6 +1,6 @@
-# skills · 代码重构指北
+# skills · 代码设计与重构指北
 
-> **基于《代码整洁之道》(Clean Code, Robert C. Martin) 与《重构: 改善既有代码设计 第二版》(Refactoring 2nd Edition, Martin Fowler) 提炼总结的完整重构知识体系**
+> **两套互补知识体系：代码整洁与重构手法 + 62 种软件设计模式**
 
 ---
 
@@ -12,28 +12,38 @@
 
 | 路径 | 安装命令 | 说明 |
 |------|----------|------|
-| `code-refactor/` | `npx skills add weibaohui/skills/code-refactor` | 代码重构与整洁之道完整知识体系 |
+| `code-refactor/` | `npx skills add weibaohui/skills/code-refactor` | 代码重构与整洁之道（24 坏味道 + 70+ 重构手法 + Clean Code 规则）|
+| `design-patterns/` | `npx skills add weibaohui/skills/design-patterns` | 62 种软件设计模式（GoF 23 + 并发 10 + 企业 7 + 现代 11 + 反模式 11）|
 
 ---
 
 ## 📖 来源
 
-本知识库的内容由以下两部经典著作提炼、整合而成：
+本知识库的内容由以下经典著作提炼、整合而成：
 
-| 书名 | 作者 | 核心贡献 |
-|------|------|----------|
-| **《代码整洁之道》**<br>*Clean Code* | Robert C. Martin (Bob 大叔) | 命名规范、函数设计、注释原则、格式规范、错误处理、类设计、系统设计、并发编程、测试原则 |
-| **《重构: 改善既有代码设计 第二版》**<br>*Refactoring: Improving the Design of Existing Code, 2nd Edition* | Martin Fowler | 24 种代码坏味道、70+ 重构手法、重构时机判断、性能与 YAGNI 决策 |
+| 书名 | 作者 | 核心贡献 | 适用 skill |
+|------|------|----------|------------|
+| **《代码整洁之道》**<br>*Clean Code* | Robert C. Martin (Bob 大叔) | 命名规范、函数设计、注释原则、格式规范、错误处理、类设计、系统设计、并发编程、测试原则 | `code-refactor` |
+| **《重构: 改善既有代码设计 第二版》**<br>*Refactoring 2e* | Martin Fowler | 24 种代码坏味道、70+ 重构手法、重构时机判断 | `code-refactor` |
+| **《设计模式：可复用面向对象软件的基础》**<br>*Design Patterns (GoF)* | Erich Gamma 等 4 人 | 23 种经典模式（创建 5 + 结构 7 + 行为 11）| `design-patterns` |
+| **《Pattern-Oriented Software Architecture, Vol 2》** | Buschmann 等 | 10 种并发模式（Active Object、Monitor、Balking、Thread Pool...）| `design-patterns` |
+| **Cloud Native Patterns** | Cornelia Davis / Chris Richardson | 微服务容错（Circuit Breaker、Bulkhead、Saga、Sidecar...）| `design-patterns` |
 
-> 两部著作相辅相成：*Clean Code* 定义了"什么是好的代码"，*Refactoring* 提供了"如何把坏代码变好"的完整工具箱。
+> **skill 互补关系**：
+> - `code-refactor` 教 **"怎么把代码改好"**（70+ 具体重构手法）
+> - `design-patterns` 教 **"用什么模式设计代码"**（62 种模式选择）
+> - 两个 skill 一起加载效果最佳
 
 ---
 
 ## 🚀 安装
 
 ```bash
-# 安装 coding-refact skill
+# 安装 code-refactor skill（代码重构手法 + Clean Code）
 npx skills add weibaohui/skills/code-refactor
+
+# 安装 design-patterns skill（62 种设计模式）
+npx skills add weibaohui/skills/design-patterns
 ```
 
 > 前提：需要 Node.js 18+。更多用法见 [skills.sh](https://skills.sh)。
@@ -48,15 +58,28 @@ npx skills add weibaohui/skills/code-refactor
 ├── 📄 LICENSE
 ├── 📄 .gitignore
 │
-└── 📁 code-refactor/             ← 代码重构 skill
-    └── 📄 SKILL.md               ← 完整知识体系（核心文件）
+├── 📁 code-refactor/             ← 代码重构 skill
+│   └── 📄 SKILL.md               ← 完整知识体系（核心文件）
+│       │
+│       ├── PART 1: PRINCIPLES        — 设计原则
+│       ├── PART 2: CODE SMELLS       — 24 种代码坏味道
+│       ├── PART 3: REFACTORING       — 70+ 重构手法
+│       ├── PART 4: CODE QUALITY      — 代码质量规范
+│       ├── PART 5: WHEN TO REFACTOR  — 重构时机决策
+│       └── QUICK DECISION MATRIX     — 快速决策矩阵
+│
+└── 📁 design-patterns/           ← 设计模式 skill
+    └── 📄 SKILL.md               ← 62 种模式知识库（核心文件）
         │
-        ├── PART 1: PRINCIPLES        — 设计原则
-        ├── PART 2: CODE SMELLS       — 24 种代码坏味道
-        ├── PART 3: REFACTORING       — 70+ 重构手法
-        ├── PART 4: CODE QUALITY      — 代码质量规范
-        ├── PART 5: WHEN TO REFACTOR  — 重构时机决策
-        └── QUICK DECISION MATRIX     — 快速决策矩阵
+        ├── PART 1: 设计原则           — SOLID + KISS + YAGNI
+        ├── PART 2: GoF 23 种          — 创建 5 + 结构 7 + 行为 11
+        ├── PART 3: 并发模式 (POSA 2)  — 10 种（Active Object、Thread Pool...）
+        ├── PART 4: 企业/分布式         — 7 种（Repository、Unit of Work...）
+        ├── PART 5: 现代模式           — 11 种（DI、Pub-Sub、CQRS、Saga...）
+        ├── PART 6: 反模式             — 11 种（God Object、Spaghetti...）
+        ├── PART 7: 模式选择决策矩阵   — 按问题/原则速查
+        ├── PART 8: 实战模板           — 重构输出标准格式 + 完整示例
+        └── QUICK DECISION MATRIX     — 快速决策表
 ```
 
 ---
@@ -113,8 +136,13 @@ npx skills add weibaohui/skills/code-refactor
 
 1. **Clean Code: A Handbook of Agile Software Craftsmanship** — Robert C. Martin, 2008
 2. **Refactoring: Improving the Design of Existing Code (2nd Edition)** — Martin Fowler, 2018
-3. **Working Effectively with Legacy Code** — Michael Feathers
-4. **Code Complete (2nd Edition)** — Steve McConnell
+3. **Design Patterns: Elements of Reusable Object-Oriented Software** — GoF, 1994
+4. **Head First Design Patterns** — Eric Freeman 等
+5. **Pattern-Oriented Software Architecture, Volume 2** — Buschmann 等
+6. **Working Effectively with Legacy Code** — Michael Feathers
+7. **Code Complete (2nd Edition)** — Steve McConnell
+8. **Microservices Patterns** — Chris Richardson
+9. **https://refactoring.guru/** — 最佳在线资源
 
 ---
 
