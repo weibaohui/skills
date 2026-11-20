@@ -14,7 +14,7 @@
 python3 scripts/fetch_browser_auth.py interactive
 ```
 
-流程：脚本拉起系统 Chrome → **仅打开唯一登录页** `https://sti.chinamobile.com/fde/micrologin/#/login` → 人工短信登录 → 终端回车 → 自动采集 Cookie / MOSS-TOKEN 并写入三处 `fde_auth.json`。
+流程：脚本拉起系统 Chrome → **仅打开唯一登录页** `https://sti.chinamobile.com/fde/micrologin/#/login` → 人工短信登录 → 终端回车 → 自动采集 Cookie / MOSS-TOKEN 并写入 `~/.fde/fde_auth.json`（唯一存储点）。
 
 样例输出（Token 已脱敏）：
 
@@ -23,7 +23,7 @@ python3 scripts/fetch_browser_auth.py interactive
 [✓] 已打开: https://sti.chinamobile.com/fde/micrologin/#/login
 [约束] 本脚本只弹出登录页，不会打开其它子系统页面。
 >>> 登录成功后按回车继续采集（Ctrl+C 取消）...
-[✓] Cookie / MOSS-TOKEN / 刷新令牌等凭证已写入 fde_auth.json（三处）。
+[✓] Cookie / MOSS-TOKEN / 刷新令牌等凭证已写入 fde_auth.json（~/.fde）。
 【✓】浏览器全量凭证自动采集完成，FDE 全套技能均已激活就绪！
  MOSS_SESSION : 8f3a2c1d...（512 字符）
  MOSS-TOKEN   : eyJhbGciOiJIUzI1Ni...（1204 字符）

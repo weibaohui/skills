@@ -17,24 +17,11 @@ import urllib.error
 BASE_URL = "https://sti.chinamobile.com"
 
 def get_auth_file_paths():
-    """获取所有鉴权文件搜索路径，按优先级排列"""
-    paths = []
+    """获取鉴权文件路径（唯一：~/.fde/fde_auth.json，可用 FDE_AUTH_PATH 覆盖）。
+    凭证放用户主目录，不放 skill 目录——skill 可能随仓库同步/重装，凭证须与其解耦。"""
     if os.environ.get("FDE_AUTH_PATH"):
-        paths.append(os.environ["FDE_AUTH_PATH"])
-    
-    # 1. 当前工作目录下的 fde_auth.json
-    paths.append(os.path.join(os.getcwd(), "fde_auth.json"))
-    
-    # 2. 脚本所在技能目录下的 config/fde_auth.json
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    skill_config = os.path.join(os.path.dirname(script_dir), "config", "fde_auth.json")
-    paths.append(skill_config)
-
-    # 3. 用户全局主目录 ~/.fde/fde_auth.json
-    home_config = os.path.expanduser("~/.fde/fde_auth.json")
-    paths.append(home_config)
-    
-    return paths
+        return [os.environ["FDE_AUTH_PATH"]]
+    return [os.path.expanduser("~/.fde/fde_auth.json")]
 
 def load_auth_config() -> Dict[str, Any]:
     """读取已存储的登录会话与鉴权配置"""
@@ -50,16 +37,8 @@ def load_auth_config() -> Dict[str, Any]:
     return {}
 
 def save_auth_config(data: Dict[str, Any], target_path: Optional[str] = None):
-    """保存或更新登录会话与鉴权配置（同步写入技能配置与全局配置）"""
-    save_targets = []
-    if target_path:
-        save_targets.append(target_path)
-    else:
-        # 同时写入当前工作区、技能内置目录以及全局 ~/.fde
-        save_targets.append(os.path.join(os.getcwd(), "fde_auth.json"))
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        save_targets.append(os.path.join(os.path.dirname(script_dir), "config", "fde_auth.json"))
-        save_targets.append(os.path.expanduser("~/.fde/fde_auth.json"))
+    """保存或更新登录会话与鉴权配置（唯一文件，见 get_auth_file_paths）"""
+    save_targets = [target_path] if target_path else get_auth_file_paths()
 
     for path in save_targets:
         try:
