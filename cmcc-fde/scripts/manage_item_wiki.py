@@ -39,15 +39,24 @@ WEBTRIGGER_BASE = "/fde/moss/web/fde-req/apps/api/v1/ENT_999999/apps/plugin_zyd_
 def _session_token(auth=None):
     """构造 webtrigger 鉴权用的 sessionToken（用户信息 JSON 的 base64）。"""
     a = auth or load_auth_config()
+    # username 必须是真实 SSO 账号(deputyAccountNumber)，employeeNo 在新版凭证中是哈希值，
+    # 填入会报 1209 "无效的 Gitee token，用户不存在"(2026-11-20 实测修复，同 fde_common.get_req_session_token)
+    sso_account = a.get("deputyAccountNumber") or a.get("username") or a.get("employeeNo", "")
     info = {
         "createTime": None, "email": a.get("email", ""), "employeeNo": a.get("employeeNo", ""),
         "enterpriseCode": a.get("enterpriseCode", ""), "enterpriseId": a.get("enterpriseId", ""),
         "enterpriseName": a.get("enterpriseName", ""), "euserId": a.get("euserId", ""),
         "euserType": 0, "loginStatus": 1, "name": a.get("name", ""), "staffCode": None,
-        "userId": a.get("userId", ""), "deputyAccountNumber": a.get("deputyAccountNumber", ""),
-        "username": a.get("employeeNo", ""),
+        "userId": a.get("userId", ""), "deputyAccountNumber": sso_account,
+        "username": sso_account,
     }
     return base64.b64encode(json.dumps(info, ensure_ascii=False).encode()).decode()
+
+
+def _sso_account():
+    """webtrigger 请求体用的 username：真实 SSO 账号（employeeNo 为哈希值不可用）。"""
+    a = load_auth_config()
+    return a.get("deputyAccountNumber") or a.get("username") or a.get("employeeNo", "")
 
 
 def _upload_one_chunk(space_key, file_path, path, filename, upload_id=None, chunk_bytes=None,
@@ -133,7 +142,7 @@ def associate(space_key, page_id, title, content_type, hash_, item_key):
             "isDeleted": False, "versionId": None,
         },
         "tenant": "ENT_999999", "sessionToken": _session_token(),
-        "username": load_auth_config().get("employeeNo", ""),
+        "username": _sso_account(),
     }
     r = make_request("POST", WEBTRIGGER_BASE + "webtrigger-associate-item-wiki", data=body)
     d = r.get("data") or {}
@@ -186,7 +195,7 @@ def list_dirs(space_key, space_id):
 def list_assoc(item_key):
     r = make_request("POST", WEBTRIGGER_BASE + "webtrigger-get-item-associate-wiki", data={
         "itemKey": item_key, "baseLineItemId": None, "tenant": "ENT_999999",
-        "sessionToken": _session_token(), "username": load_auth_config().get("employeeNo", ""),
+        "sessionToken": _session_token(), "username": _sso_account(),
     })
     items = r.get("data") or []
     print(f"【{item_key} 关联知识】(共 {len(items)} 条)")

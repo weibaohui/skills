@@ -189,6 +189,10 @@ def get_req_session_token() -> str:
     ent_name = auth.get("enterpriseName") or auth.get("tenantName") or ""
     email = auth.get("email", "")
     emp_no = auth.get("employeeNo") or auth.get("username") or auth.get("deputyAccountNumber") or ""
+    # username/deputyAccountNumber 必须是真实 SSO 账号(如 weibaohui@hq.cmcc)，
+    # 服务端按 username 查找用户；employeeNo 在新版凭证中是哈希值，填入会报
+    # "无效的 Gitee token，用户不存在"(2026-11-20 实测修复)
+    sso_account = auth.get("deputyAccountNumber") or auth.get("username") or emp_no
     name = auth.get("name", "")
 
     def _build() -> str:
@@ -205,8 +209,8 @@ def get_req_session_token() -> str:
             "name": name,
             "staffCode": auth.get("staffCode"),
             "userId": user_id,
-            "deputyAccountNumber": emp_no,
-            "username": emp_no,
+            "deputyAccountNumber": sso_account,
+            "username": sso_account,
         }
         raw = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
         return base64.b64encode(raw.encode("utf-8")).decode("utf-8")
