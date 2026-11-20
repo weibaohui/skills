@@ -1,0 +1,4 @@
+interface:
+  display_name: "中国移动PPT v2｜固定模板·极高密度"
+  short_description: "按内置固定模板制作中国移动PPT v2，强化极高信息密度、嵌套布局与可编辑架构、拓扑和流程图"
+  default_prompt: "使用 $ppt-china-mobile-v2，按内置中国移动内部汇报固定模板制作我的材料，正文采用极高信息密度，主动使用可编辑架构图、拓扑图和流程图，按内容灵活搭配图文，先规划布局再逐页制作。"

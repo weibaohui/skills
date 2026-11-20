@@ -5,6 +5,14 @@
 assets/
 sx.lock
 
+# Secrets / auth files
+fde_auth.json
+*.auth.json
+
+# Python bytecode
+__pycache__/
+*.pyc
+
 # OS files
 .DS_Store
 Thumbs.db
