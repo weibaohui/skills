@@ -66,8 +66,16 @@ def verify_and_save(cookie_str: str):
         "userId": user_id,
         "euserId": euser_id,
         "tenantName": tenant_name,
-        "loginStatus": login_status
+        "loginStatus": login_status,
     }
+    # 一次性合并接口返回的全部身份字段 (name/email/employeeNo/staffCode/euserType 等),
+    # 避免后续 get_req_session_token 用残缺身份构造 session token 导致需求子系统 401/400
+    for k, v in user_info.items():
+        if v not in (None, ""):
+            auth_payload[k] = v
+    # 身份信息变化后,旧缓存的 req_session_token 已失效,清掉让脚本按新身份重建
+    auth_payload.pop("req_session_token", None)
+    auth_payload.pop("sessionToken", None)
 
     # 持久化存储
     save_auth_config(auth_payload)

@@ -221,7 +221,11 @@ def get_clone_info(target: str):
     print("标准 HTTP 克隆地址:")
     print(f"  {http_url}")
     print("\n使用当前已配置 Token 一键免密克隆命令:")
-    print(f"  {auth_clone_cmd}")
+    if token:
+        print(f"  {auth_clone_cmd}")
+    else:
+        print(f"  {auth_clone_cmd}   # ponytail: 当前 fde_auth.json 无 private_token（重采凭证后未重签），此命令需手动输密码")
+        print("  [!] 请先执行: python3 scripts/manage_token.py create --name WorkBuddy 重新签发 Token 并重跑本命令")
     print("=" * 65 + "\n")
 
 def get_code_user_id() -> int:

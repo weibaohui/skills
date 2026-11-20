@@ -200,9 +200,6 @@ def get_req_session_token() -> str:
     若无缓存，则自动从 auth 中的当前登录用户信息精确构造并回写缓存。
     """
     auth = load_auth_config()
-    cached = auth.get("req_session_token") or auth.get("sessionToken", "")
-    if cached:
-        return cached
 
     user_id = auth.get("userId", "")
     if not user_id:
@@ -215,24 +212,32 @@ def get_req_session_token() -> str:
     emp_no = auth.get("employeeNo") or auth.get("username") or auth.get("deputyAccountNumber") or ""
     name = auth.get("name", "")
 
-    payload = {
-        "createTime": None,
-        "email": email,
-        "employeeNo": emp_no,
-        "enterpriseCode": ent_id.replace("ENT_", "") if ent_id else "999999",
-        "enterpriseId": ent_id,
-        "enterpriseName": ent_name,
-        "euserId": euser_id,
-        "euserType": int(auth.get("euserType", 0) or 0),
-        "loginStatus": int(auth.get("loginStatus", 1) or 1),
-        "name": name,
-        "staffCode": auth.get("staffCode"),
-        "userId": user_id,
-        "deputyAccountNumber": emp_no,
-        "username": emp_no,
-    }
-    raw = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
-    token = base64.b64encode(raw.encode("utf-8")).decode("utf-8")
+    def _build() -> str:
+        payload = {
+            "createTime": None,
+            "email": email,
+            "employeeNo": emp_no,
+            "enterpriseCode": ent_id.replace("ENT_", "") if ent_id else "999999",
+            "enterpriseId": ent_id,
+            "enterpriseName": ent_name,
+            "euserId": euser_id,
+            "euserType": int(auth.get("euserType", 0) or 0),
+            "loginStatus": int(auth.get("loginStatus", 1) or 1),
+            "name": name,
+            "staffCode": auth.get("staffCode"),
+            "userId": user_id,
+            "deputyAccountNumber": emp_no,
+            "username": emp_no,
+        }
+        raw = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+        return base64.b64encode(raw.encode("utf-8")).decode("utf-8")
+
+    expected = _build()
+    cached = auth.get("req_session_token") or auth.get("sessionToken", "")
+    if cached == expected:
+        return cached
+    # 缓存 token 与当前完整身份不一致(残缺/过期身份生成),重新生成并回写
+    token = expected
     save_auth_config({"req_session_token": token, "sessionToken": token})
     return token
 

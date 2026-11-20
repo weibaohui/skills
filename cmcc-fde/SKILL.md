@@ -74,8 +74,8 @@ examples_en:
 | [auth_login.py](./scripts/auth_login.py) | **登录会话初始化与验证**：使用现有 Cookie/Token 校验企业与用户身份档案并持久化同步 | `python3 auth_login.py --check` |
 | [manage_token.py](./scripts/manage_token.py) | **代码仓库私人令牌管理**：直接调用后台 API 突破前端日历限制，创建永久有效 (`permanent`) 的全权限 Token | `python3 manage_token.py create --name AI-Token` |
 | [manage_spaces.py](./scripts/manage_spaces.py) | **研发空间深度管理**：列出当前用户所有空间（包含空间唯一 ID `spaceId`、空间编码 `spaceCode`、名称与角色），支持多空间交互式选择与默认空间持久化切换 | `python3 manage_spaces.py list`<br>`python3 manage_spaces.py select`<br>`python3 manage_spaces.py current` |
-| [manage_demands.py](./scripts/manage_demands.py) | **敏捷需求深度管理**：需求清单、新建、状态流转、删除，以及任意详情字段编辑（`update --set`） | `python3 manage_demands.py list`<br>`python3 manage_demands.py update --id <ID> --set 优先级=P1` |
-| [manage_bugs.py](./scripts/manage_bugs.py) | **敏捷缺陷深度管理**：与需求共用端点，固化缺陷类型；缺陷清单、新建、状态流转、删除、任意详情字段编辑 | `python3 manage_bugs.py list`<br>`python3 manage_bugs.py update --id <ID> --set 严重程度=3-一般错误` |
+| [manage_demands.py](./scripts/manage_demands.py) | **敏捷需求深度管理**：需求清单、新建、状态流转、删除，以及任意详情字段编辑（`update --set`）。**所有子命令必须显式带 `--space <编码>`，无默认空间记忆**（不带即报错退出，2026-11-20 实测） | `python3 manage_demands.py list --space G2026000S`<br>`python3 manage_demands.py update --space G2026000S --id <ID> --set 优先级=P1` |
+| [manage_bugs.py](./scripts/manage_bugs.py) | **敏捷缺陷深度管理**：与需求共用端点，固化缺陷类型；缺陷清单、新建、状态流转、删除、任意详情字段编辑。**同上，所有子命令必须显式带 `--space <编码>`** | `python3 manage_bugs.py list --space G2026000S`<br>`python3 manage_bugs.py update --space G2026000S --id <ID> --set 严重程度=3-一般错误` |
 | [req_fields.py](./scripts/req_fields.py) | **字段转换公共模块**：`update --set` 的字段别名归一化、类型转换（UUID/数组/富文本/用户对象）与写入后读回验证，被上述两个脚本共用（不单独调用） | — |
 | [manage_repos.py](./scripts/manage_repos.py) | **代码仓库深度操作**：新建仓库、浏览仓库、分支列表、免克隆直接在线遍历文件树与读取源码、合并请求 (PR) 追踪、成员权限与免密 Git 克隆 | `python3 manage_repos.py create --name xx --path xx`<br>`python3 manage_repos.py branches --path 64`<br>`python3 manage_repos.py read --path 64 --file README.md` |
 | [manage_assets.py](./scripts/manage_assets.py) | **科研资产中心检索**：全景统计、科技方案/技能/实践资产分页搜索与详情归档查询 | `python3 manage_assets.py search --keyword 智能` |
@@ -86,9 +86,11 @@ examples_en:
 
 ---
 
-## 工作流与操作步骤
+## 登录与能力手册
 
-### 第一步：初始化或刷新登录凭证
+> 登录凭证初始化是唯一的线性前置步骤（能力一）；此后各「能力」章节相互独立、无先后顺序，按需使用。
+
+### 第一步（唯一前置步骤）：初始化或刷新登录凭证
 
 #### 方式 A（强烈推荐，适合所有用户与小白）：全自动浏览器凭证采集
 
@@ -135,7 +137,7 @@ python3 scripts/auth_login.py --check
 
 ---
 
-### 第二步：一键创建全功能永久代码令牌 (Private Token)
+### 能力：一键创建全功能永久代码令牌 (`manage_token.py`)
 
 底层代码系统限制前端日历只能选择到最近 20 年，但通过 [manage_token.py](./scripts/manage_token.py) 可以直接突破限制，自动创建一个系统识别为 **`permanent`（永久有效）** 的全权限代码令牌：
 
@@ -154,7 +156,7 @@ python3 scripts/manage_token.py delete --id <令牌ID>
 
 ---
 
-### 第三步：研发空间查看、选择与需求管理
+### 能力：研发空间查看、选择与需求/缺陷管理 (`manage_spaces.py` / `manage_demands.py` / `manage_bugs.py`)
 
 灵畿平台的敏捷协同由研发空间（Dev Space）与敏捷需求子系统（底层由 Proxima Core / Gitee Team 引擎驱动）承载。系统提供了专有的研发空间管理工具 [manage_spaces.py](./scripts/manage_spaces.py) 与敏捷需求工具 [manage_demands.py](./scripts/manage_demands.py)：
 
@@ -176,15 +178,15 @@ python3 scripts/manage_spaces.py current
 ```
 
 #### 2. 空间敏捷需求深度管理 (`manage_demands.py`)
-在指定空间或当前默认空间下进行工作项的增删改查：
+在指定空间下进行工作项的增删改查。
+
+**⚠️ 硬性纪律（实测确认，agent 执行前必须自查）**：`manage_demands.py` / `manage_bugs.py` 的所有子命令**不存在默认空间记忆**——不带 `--space` 一律报 `[x] 未指定空间` 直接退出（2026-11-20 回归实测）。SKILL 文档虽写有"默认空间"说法，实测该机制无效。执行每条命令前必须显式携带 `--space <spaceCode>`（先 `spaces` 子命令列出可用编码），不带就执行属违规操作。
 
 ```bash
 # 0. 列出研发空间（编码 spaceCode 供后续 --space 使用）
 python3 scripts/manage_demands.py spaces
 
-# 1. 查询需求列表 (未带 --space 时使用默认空间，可用 manage_spaces.py 设置)
-python3 scripts/manage_demands.py list
-# 也可以显式指定空间编码：
+# 1. 查询需求列表（必须显式带 --space，无默认空间）
 python3 scripts/manage_demands.py list --space G2026000S
 
 # 2. 创建新需求
@@ -266,7 +268,7 @@ python3 scripts/manage_bugs.py update --space G2026000S --id <缺陷ID> \
 
 ---
 
-### 第四步：深度查询与操作代码仓库
+### 能力：深度查询与操作代码仓库 (`manage_repos.py`)
 
 使用 [manage_repos.py](./scripts/manage_repos.py) 浏览、检索以及直接读取企业代码仓库：
 
@@ -306,7 +308,7 @@ python3 scripts/manage_repos.py create --name "open-repo" --path "open-repo" --p
 
 ---
 
-### 第五步：资产中心全景统计与检索
+### 能力：资产中心全景统计与检索 (`manage_assets.py`)
 
 使用 [manage_assets.py](./scripts/manage_assets.py) 检索平台沉淀的科技方案、技能与实践资产：
 
@@ -323,7 +325,7 @@ python3 scripts/manage_assets.py detail --id <资产ID>
 
 ---
 
-### 第六步：调用原生“灵宝”AI 智能体
+### 能力：调用原生“灵宝”AI 智能体 (`manage_agent.py`)
 
 使用 [manage_agent.py](./scripts/manage_agent.py) 与移动“灵宝”AI 智能体协同：
 
@@ -343,7 +345,7 @@ python3 scripts/manage_agent.py run --agent-id "visit-strategist" --prompt "请�
 
 ---
 
-### 第七步：知识库 (Wiki) 深度管理与文档上传下载
+### 能力：知识库 (Wiki) 深度管理与文档上传下载 (`manage_wiki.py`)
 
 使用 [manage_wiki.py](./scripts/manage_wiki.py) 进行知识库空间检索、目录树查看、在线正文阅读、文档导出下载及本地文件上传导入：
 
@@ -377,7 +379,7 @@ python3 scripts/manage_wiki.py create --space-id 87 --title "新建在线页面"
 python3 scripts/manage_wiki.py delete --space-id 87 --doc-ids 1750,1751
 ```
 
-### 第八步：事项关联知识——任意文件（含 zip）上传并关联到需求/缺陷
+### 能力：事项关联知识——任意文件（含 zip）上传并关联到需求/缺陷 (`manage_item_wiki.py`)
 
 使用 [manage_item_wiki.py](./scripts/manage_item_wiki.py)。这是需求页「上传知识」按钮的接口级复刻（plugin_zyd_item_associate_wiki 链路），**与 `manage_wiki.py upload` 的区别**：后者走 doc_import 转换通道（只支持 word/pdf 转 doc、md/txt 转页面），本脚本走 `doc-open-api/CMCC/{spaceKey}/files/upload` 原始文件通道 + webtrigger 关联，**任何格式都能传**（zip/py/xlsx 等均实测可行），且能直接挂到需求/缺陷单上。
 
@@ -407,7 +409,7 @@ python3 scripts/manage_item_wiki.py disassociate --object-id KCMHdtm6KF
 
 实战案例：需求 G2026000S-34（wiki管理功能增强）的参考实现 `manage_item_wiki.py` 已传至 Lingjizhishi/操作手册（pageId=1764）并关联。
 
-### 第九步：资产中心提交候选资产（Skill 等）
+### 能力：资产中心提交候选资产（Skill 等）(`manage_asset_submit.py`)
 
 入口：空间内 资产管理 → 提交资产（`/fde/microportal/#/asset-center/create?spaceCode=`）。脚本复刻其两个接口：
 
@@ -441,7 +443,7 @@ python3 scripts/manage_asset_submit.py submit --name "xx最佳实践" --type PRA
 
 已知边界：三种类型均实测创建成功（SKILL/SOLUTION/PRACTICE 各有草稿实证）；首次提交走 assets/create，草稿再次保存走 assets/edit；`type/list-tree` 接口直调报 401（映射取自页面组件而非该接口）；**能力类型标签组（asset_ability_type）仅 SKILL 有效**——SOLUTION/PRACTICE 发布时带上会报 `COMMON-4001 未知的标签组`（草稿模式不校验，脚本已改为仅 SKILL 附带）。
 
-### 第十步：资产管理（状态、生命周期与清理）
+### 能力：资产管理（状态、生命周期与清理）
 
 资产管理入口：空间内 资产管理 列表页（`/fde/microportal/#/dev-space/workspace/<spaceCode>/asset-manage`）。
 

@@ -128,6 +128,14 @@ def _workspace_object_id(space: Dict[str, str], h: Dict[str, str]) -> str:
             return items[0].get("workspace", {}).get("objectId", "")
     except Exception:
         pass
+    # 空间尚无任何需求时 search 拿不到 workspace,回退到 /workspaces 全量列表按 key 匹配
+    res = make_request("GET", REQ_API + "/workspaces", custom_headers=h)
+    try:
+        for ws in res.get("results", []) or []:
+            if ws.get("key") == space["code"]:
+                return ws.get("objectId", "")
+    except Exception:
+        pass
     return ""
 
 
