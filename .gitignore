@@ -9,6 +9,9 @@ sx.lock
 fde_auth.json
 *.auth.json
 
+# Distribution artifacts
+*.zip
+
 # Python bytecode
 __pycache__/
 *.pyc
