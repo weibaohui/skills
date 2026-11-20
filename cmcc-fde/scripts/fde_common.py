@@ -8,6 +8,7 @@ import gzip
 import json
 import os
 import sys
+import ssl
 import time
 from typing import Any, Dict, Optional
 import urllib.request
@@ -151,8 +152,16 @@ def make_request(
 
     req = urllib.request.Request(url, data=req_body, headers=headers, method=method.upper())
 
+    # 证书链含 SHECA 等国内 CA，macOS Python 默认包不含其根证书，优先用 certifi 的 CA 包
+    ssl_ctx = None
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        import certifi
+        ssl_ctx = ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        ssl_ctx = ssl.create_default_context()
+
+    try:
+        with urllib.request.urlopen(req, timeout=timeout, context=ssl_ctx) as resp:
             raw = resp.read()
             text = ""
             try:

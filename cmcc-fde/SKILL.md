@@ -1,16 +1,38 @@
 ---
 name: cmcc-fde
+display_name: 中国移动灵畿科研平台（FDE）自动化助手
+display_name_en: CMCC Lingji FDE Platform Automation Assistant
 description: >-
-  中国移动“灵畿”科研底座平台 (FDE) 自动化工具集与流程指南。
-  支持统一登录会话初始化、代码仓库永久令牌 (Private Token) 管理、企业代码仓库免克隆在线检索与读取、
-  知识库 (Wiki) 文档在线阅读/上传导入与多格式导出下载、科研资产中心检索与统计、“灵宝”AI原生智能体互动，
-  以及研发空间与需求管理 (Item CRUD/状态流转)。
-  内置小白用户全自动凭证采集（免F12抓包、自动预热采集子系统Token与自动签发永久代码令牌）与单点登录 Ticket 机制。
+  中国移动“灵畿”科研平台 (FDE) 自动化工具集与流程指南。当用户提及 FDE、灵畿、中国移动科研平台、
+  登录凭证/会话采集、代码仓库与永久令牌 (Private Token)、研发空间、敏捷需求/缺陷增删改查与字段编辑、
+  知识库 Wiki 文档、科研资产、灵宝 AI 智能体等关键词时应使用本技能。
+  提供统一登录会话初始化、代码仓库永久令牌管理、企业代码仓库免克隆在线检索与读取、
+  知识库文档在线阅读/上传导入与多格式导出下载、科研资产中心检索与统计、灵宝 AI 原生智能体互动，
+  以及研发空间与需求/缺陷全生命周期管理 (Item CRUD/状态流转/任意字段编辑)。
+  内置小白用户全自动凭证采集（免 F12 抓包、本地生成子系统 Token 与自动签发永久代码令牌）与单点登录 Ticket 机制。
+description_zh: >-
+  一站式自动化中国移动“灵畿”科研平台 (FDE)：涵盖登录凭证采集、代码仓库与永久令牌、
+  研发空间、需求与缺陷的增删改查及字段编辑、知识库文档、科研资产检索与灵宝 AI 智能体互动。
+description_en: >-
+  An all-in-one automation toolkit for CMCC Lingji FDE platform: credential collection, code repositories
+  and permanent tokens, R&D spaces, full CRUD and field editing of demands and bugs, Wiki documents,
+  research asset search, and Lingji AI agent interaction.
+version: 2.0.2
+author: "中国移动"
+allowed-tools: Bash
+examples_zh:
+  - "帮我采集 FDE 登录凭证并签发永久代码令牌"
+  - "列出 G2026000S 空间的需求，并把某条需求优先级改成 P1、负责人设为张三"
+  - "在线读取代码仓库的目录树和源码，或把某篇知识库文档导出成 PDF"
+examples_en:
+  - "Collect FDE login credentials and issue a permanent code token"
+  - "List demands in space G2026000S and update one to priority P1 with an assignee"
+  - "Browse a repository tree online, or export a Wiki document to PDF"
 ---
 
-# 中国移动“灵畿”科研底座平台 (FDE) 技能指南
+# 中国移动“灵畿”科研平台 (FDE) 技能指南
 
-本技能为中国移动“灵畿”科研底座平台（FDE / MOSS）提供完整的 Python 命令行工具集与操作流程。所有脚本**高度复用同一个鉴权文件 (`fde_auth.json`)**，除可选的知识库 `brotli` 模块外，其余脚本仅需 Python 3 标准库即可直接运行。
+本技能为中国移动“灵畿”科研平台（FDE）提供完整的 Python 命令行工具集与操作流程。所有脚本**高度复用同一个鉴权文件 (`fde_auth.json`)**，除可选的知识库 `brotli` 模块外，其余脚本仅需 Python 3 标准库即可直接运行。
 
 > [!IMPORTANT]
 > **小白用户零门槛（Zero-Friction）设计原则**：
@@ -26,13 +48,21 @@ description: >-
 
 ## 平台常用入口与登录地址
 
-- **统一登录页面**：[https://sti.chinamobile.com/fde/micrologin/#/login](https://sti.chinamobile.com/fde/micrologin/#/login)
-- **个人工作台入口**：[https://sti.chinamobile.com/fde/microportal/#/workbench](https://sti.chinamobile.com/fde/microportal/#/workbench)
-- **研发空间列表入口**：[https://sti.chinamobile.com/fde/microportal/#/dev-space](https://sti.chinamobile.com/fde/microportal/#/dev-space)
-- **需求与看板系统入口**：[https://sti.chinamobile.com/fde/base/fde-req-web/#/workspace/boards/req](https://sti.chinamobile.com/fde/base/fde-req-web/#/workspace/boards/req)
-- **代码子系统入口**：[https://sti.chinamobile.com/fde/base/fde-code-web/](https://sti.chinamobile.com/fde/base/fde-code-web/)
-- **代码令牌管理页**：[https://sti.chinamobile.com/fde/base/fde-code-web/private_token](https://sti.chinamobile.com/fde/base/fde-code-web/private_token)
-- **知识库系统入口**：[https://sti.chinamobile.com/fde-wiki-web/](https://sti.chinamobile.com/fde-wiki-web/)
+> [!IMPORTANT]
+> **⭐ 唯一正确的 FDE 登录页（本 skill 浏览器自动化的唯一弹出地址）**：
+> **https://sti.chinamobile.com/fde/micrologin/#/login**
+> - `fetch_browser_auth.py open / interactive` **只会打开这一个地址**，凭证采集阶段也只从当前页面读 Cookie，**不会弹出任何其它子系统页面**。
+> - 下表中除登录页以外的地址都是**登录成功后的落地页/业务入口**，仅供人工浏览器访问或接口参考，**绝不可作为登录页直接弹出**（例如 `/moss/microhome/#/home` 曾因被误设为登录页导致登录态异常，已废弃修正）。
+
+| 类别 | 地址 | 用途 |
+| :--- | :--- | :--- |
+| ⭐ **唯一登录页** | [https://sti.chinamobile.com/fde/micrologin/#/login](https://sti.chinamobile.com/fde/micrologin/#/login) | **本 skill 唯一弹出的页面**，人工完成短信/验证码登录 |
+| 个人工作台（登录后） | [https://sti.chinamobile.com/fde/microportal/#/workbench](https://sti.chinamobile.com/fde/microportal/#/workbench) | 登录成功后的落地页，人工访问 |
+| 研发空间列表（登录后） | [https://sti.chinamobile.com/fde/microportal/#/dev-space](https://sti.chinamobile.com/fde/microportal/#/dev-space) | 业务入口，人工访问 |
+| 需求与看板（登录后） | [https://sti.chinamobile.com/fde/base/fde-req-web/#/workspace/boards/req](https://sti.chinamobile.com/fde/base/fde-req-web/#/workspace/boards/req) | 业务入口，人工访问 |
+| 代码子系统（登录后） | [https://sti.chinamobile.com/fde/base/fde-code-web/](https://sti.chinamobile.com/fde/base/fde-code-web/) | 业务入口（网页 UI），人工访问 |
+| 代码令牌管理页 | [https://sti.chinamobile.com/fde/base/fde-code-web/private_token](https://sti.chinamobile.com/fde/base/fde-code-web/private_token) | 业务入口，人工访问 |
+| 知识库系统 | [https://sti.chinamobile.com/fde-wiki-web/](https://sti.chinamobile.com/fde-wiki-web/) | 业务入口，人工访问 |
 
 ---
 
@@ -47,10 +77,12 @@ description: >-
 | [manage_demands.py](./scripts/manage_demands.py) | **敏捷需求深度管理**：需求清单、新建、状态流转、删除，以及任意详情字段编辑（`update --set`） | `python3 manage_demands.py list`<br>`python3 manage_demands.py update --id <ID> --set 优先级=P1` |
 | [manage_bugs.py](./scripts/manage_bugs.py) | **敏捷缺陷深度管理**：与需求共用端点，固化缺陷类型；缺陷清单、新建、状态流转、删除、任意详情字段编辑 | `python3 manage_bugs.py list`<br>`python3 manage_bugs.py update --id <ID> --set 严重程度=3-一般错误` |
 | [req_fields.py](./scripts/req_fields.py) | **字段转换公共模块**：`update --set` 的字段别名归一化、类型转换（UUID/数组/富文本/用户对象）与写入后读回验证，被上述两个脚本共用（不单独调用） | — |
-| [manage_repos.py](./scripts/manage_repos.py) | **代码仓库深度操作**：浏览仓库、分支列表、免克隆直接在线遍历文件树与读取源码、合并请求 (PR) 追踪、成员权限与免密 Git 克隆 | `python3 manage_repos.py branches --path 64`<br>`python3 manage_repos.py read --path 64 --file README.md` |
+| [manage_repos.py](./scripts/manage_repos.py) | **代码仓库深度操作**：新建仓库、浏览仓库、分支列表、免克隆直接在线遍历文件树与读取源码、合并请求 (PR) 追踪、成员权限与免密 Git 克隆 | `python3 manage_repos.py create --name xx --path xx`<br>`python3 manage_repos.py branches --path 64`<br>`python3 manage_repos.py read --path 64 --file README.md` |
 | [manage_assets.py](./scripts/manage_assets.py) | **科研资产中心检索**：全景统计、科技方案/技能/实践资产分页搜索与详情归档查询 | `python3 manage_assets.py search --keyword 智能` |
 | [manage_agent.py](./scripts/manage_agent.py) | **灵宝 AI 智能体协同**：查询可用智能体列表、历史会话问答追踪与异步派发任务 | `python3 manage_agent.py list`<br>`python3 manage_agent.py run --agent-id "quick-qa" --prompt "分析报告"` |
 | [manage_wiki.py](./scripts/manage_wiki.py) | **知识库文档与空间管理**：空间列表、目录树深度展开、富文本正文在线还原读取、文档导出下载 (Word/PDF/MD/HTML)、本地文件上传导入、页面创建与删除 | `python3 manage_wiki.py spaces`<br>`python3 manage_wiki.py download --doc-id 1749 --format pdf`<br>`python3 manage_wiki.py upload --space-id 87 --file doc.md` |
+| [manage_item_wiki.py](./scripts/manage_item_wiki.py) | **事项关联知识（任意文件上传）**：把本地文件（含 zip 等导入通道不支持的格式）上传到知识库选定目录并关联到需求/事项；`dirs` 列目录树供选择落点、支持查询/取消关联。上传 path 目录段按目录**标题**匹配（脚本自动解析），>5MB 自动分片 | `python3 manage_item_wiki.py dirs --space-key Lingjizhishi`<br>`python3 manage_item_wiki.py upload --space-key Lingjizhishi --parent-page-id 1742 --file pkg.zip --item-key G2026000S-34`<br>`python3 manage_item_wiki.py list --item-key G2026000S-34` |
+| [manage_asset_submit.py](./scripts/manage_asset_submit.py) | **资产中心提交候选资产（Skill/解决方案/最佳实践）**：文件上传（fileId→storageKey）+ 创建资产全链路；三类型必填差异、中文标签自动转 slug、暂存模式；能力类型标签仅 SKILL 合法 | `python3 manage_asset_submit.py upload --file pkg.zip`<br>`python3 manage_asset_submit.py submit --name "xx技能包" --type SKILL --one-liner "一句话" --file pkg.zip --space-code G2026000S --scope SPACE` |
 
 ---
 
@@ -65,23 +97,29 @@ description: >-
 
 ```bash
 # 一步到位交互式采集（推荐）：
-# 1. 自动启动系统 Chrome 打开登录页
+# 1. 自动启动系统 Chrome，只打开唯一登录页 micrologin/#/login
 # 2. 提示用户输入手机号和验证码
-# 3. 用户在终端按回车，脚本自动预热各子系统并采集全量凭证
+# 3. 用户在终端按回车，脚本从当前页面采集全量凭证（不弹出其它页面）
 python3 scripts/fetch_browser_auth.py interactive
 
 # 也可以分步执行：
-python3 scripts/fetch_browser_auth.py open   # 仅拉起并打开页面
-python3 scripts/fetch_browser_auth.py fetch  # 登录后自动轮询抓取并预热子系统
+python3 scripts/fetch_browser_auth.py open   # 仅拉起并打开唯一登录页
+python3 scripts/fetch_browser_auth.py fetch  # 登录后自动轮询抓取并采集凭证
 python3 scripts/fetch_browser_auth.py status # 仅检查当前浏览器登录状态
 ```
 
+> [!IMPORTANT]
+> **浏览器弹出的页面地址纪律（务必遵守）**：
+> - `fetch_browser_auth.py` **只弹出 `https://sti.chinamobile.com/fde/micrologin/#/login` 这一个登录页**，采集凭证时只从当前已登录页面读 Cookie。
+> - **不会、也不应弹出** `/moss/microhome/#/home`（旧错误配置，已废弃）、`fde-req-web` 需求看板等任何其它页面——那些是登录后的业务落地页，直接打开会导致登录态异常。
+> - 需求子系统 `sessionToken` 已由 `fde_common.get_req_session_token()` **本地身份生成**，无需浏览器预热导航。
+
 > [!NOTE]
-> **自动预热与动态 Token 采集机制**：
+> **凭证采集与动态 Token 机制**：
 > 1. 主平台工作台使用 `MOSS_SESSION` Cookie 与 `MOSS-TOKEN` JWT。
-> 2. 需求子系统（Proxima Core）采用微前端隔离架构，拥有独立的会话凭证 `sessionToken`。
-> 3. `fetch_browser_auth.py` 在主平台登录成功后，会自动导航至 `fde-req-web` 需求看板页完成静默预热，并自动提取注入到浏览器中的 `sessionToken` 保存至 `fde_auth.json`。
-> 4. 同时，脚本会自动调用平台通用单点登录 Ticket 接口（`GET /fde/moss/web/auth/v1/user/get-auth-ticket`）并在代码系统自动签发一个 2046 年过期的永久代码 Token。普通用户完全不需要关心这些内部机制。
+> 2. 需求子系统 `sessionToken` 为无签名身份 JSON，本地即可生成（`get_req_session_token`），不依赖浏览器抓包。
+> 3. 脚本从登录后的当前页面读取全部 Cookie（含 sessionToken 冗余备份）写入 `fde_auth.json`。
+> 4. 脚本会自动调用 `auth_login.py --check` 校验身份，并在代码系统自动签发一个 2046 年过期的永久代码 Token。普通用户完全不需要关心这些内部机制。
 
 #### 方式 B：手动提供 Cookie（高级开发者或已有现有会话）
 
@@ -215,10 +253,11 @@ python3 scripts/manage_bugs.py update --space G2026000S --id <缺陷ID> \
 | 描述 description / requirement | 纯文本（自动转富文本） | `--set "描述=补充内容"` |
 | 复现步骤 StepReproduce | 纯文本 | `--set "复现步骤=打开页面点按钮"` |
 | 验收标准 acceptanceCriteria | 纯文本 | `--set "验收标准='响应<1秒'"` |
-| 负责人 assignee / 关注人 watchers | 姓名或账号，多个用逗号 | `--set "负责人=周志君,张三"` |
+| 责任人 assignee / 负责人 / 关注人 watchers | 姓名或账号，多个用逗号 | `--set "责任人=魏宝辉"` |
+| 处理人 flowHandler | 姓名或账号，多个用逗号 | `--set "处理人=魏宝辉"`（注：`ItemHandler`/当前处理人为工作流系统字段，写入无效；界面"处理人"对应 `flowHandler`） |
 | 标签 Tag | 标签名，多个用逗号 | `--set "标签=产品,客户关注"`（可选值见字段定义） |
 | 迭代 sprint / 故事点 StoryPoint / 版本 version | 字符串 | `--set "迭代=2026-Sprint1"` |
-| 计划开始/结束时间 | 时间戳或字符串 | `--set "计划开始时间=..."` |
+| 计划开始/结束时间 PlanStartTime / PlanFinishTime | `YYYY-MM-DD`（自动转毫秒时间戳，口径为当天 00:00 UTC+8） | `--set "计划结束时间=2026-11-27"`（完成时限即设此字段） |
 
 > [!IMPORTANT]
 > - 字段转换规则由公共模块 `scripts/req_fields.py` 统一实现：只有 `name` 写在顶层，其余字段一律写入 `values`；选项/人员/标签字段会转成数组，描述类转成 Slate 富文本。
@@ -252,7 +291,18 @@ python3 scripts/manage_repos.py members --path 64
 
 # 7. 获取免密 Git HTTP 克隆命令
 python3 scripts/manage_repos.py clone-info --path 64
+
+# 8. 新建代码仓库（复刻 UI 新建代码仓库表单，2026-11-20 实测）
+python3 scripts/manage_repos.py create --name "my-repo" --path "my-repo" --desc "简介"
+python3 scripts/manage_repos.py create --name "open-repo" --path "open-repo" --public   # 企业内部开源
 ```
+
+> [!NOTE]
+> **代码仓库 Git 凭证说明**（2026-11-20 实测修正）：平台 Git HTTP 采用 Basic 认证 + Private Token，底层实为 Gitee 企业版：
+> - **用户名 = `fde_auth.json` 中的 `username`（SSO 登录账号，如 `weibaohui@hq.cmcc`）**；实测 `oauth2` 也能通过（服务端只认 Token、不校验用户名），但脚本统一用 SSO 账号；`@` 已自动 URL 编码为 `%40`；
+> - **密码 = `manage_token.py` 签发的 Private Token**；
+> - **Git HTTP 入口路径为 `/fde/code/<full_path>.git`**（不是网页子系统入口 `/fde/base/fde-code-web/`），完整命令形如 `git clone https://weibaohui%40hq.cmcc:<private_token>@sti.chinamobile.com/fde/code/<full_path>.git`，由 `clone-info` 一键生成；
+> - 实测凭证矩阵：正确用户名+Token → HTTP 200；错误密码 → 404 "Incorrect username or password"；无认证 → 401。
 
 ---
 
@@ -327,6 +377,108 @@ python3 scripts/manage_wiki.py create --space-id 87 --title "新建在线页面"
 python3 scripts/manage_wiki.py delete --space-id 87 --doc-ids 1750,1751
 ```
 
+### 第八步：事项关联知识——任意文件（含 zip）上传并关联到需求/缺陷
+
+使用 [manage_item_wiki.py](./scripts/manage_item_wiki.py)。这是需求页「上传知识」按钮的接口级复刻（plugin_zyd_item_associate_wiki 链路），**与 `manage_wiki.py upload` 的区别**：后者走 doc_import 转换通道（只支持 word/pdf 转 doc、md/txt 转页面），本脚本走 `doc-open-api/CMCC/{spaceKey}/files/upload` 原始文件通道 + webtrigger 关联，**任何格式都能传**（zip/py/xlsx 等均实测可行），且能直接挂到需求/缺陷单上。
+
+> [!IMPORTANT]
+> - **上传目录必须由用户选定，脚本不默认落任何目录**：不带 `--parent-page-id` 时自动列出空间目录树供选择（或用 `dirs` 子命令单独查看）。
+> - **上传 path 的目录段按【目录标题】匹配**：脚本内部先把 `--parent-page-id` 解析成目录标题再拼 path（如 `/操作手册/xx.zip`）。直接传数字会被当成"名为该数字的文件夹"而在根目录新建错误文件夹（实测踩过：传 `/1742/x` 造出了名为 1742 的目录）。
+> - 同目录同名文件重复上传报「文档已存在」（HTTP 400），这是服务端判重，先 `disassociate` 或换名。
+> - >5MB 自动分片（totalChunks/chunkIndex/uploadId），与前端插件一致。
+> - `token` 请求头的出处与再获取方法见 `manage_item_wiki.py` 内 `API_TOKEN` 上方的注释块（插件 bundle 兜底值，平台换配置需从页面控制台重新抓取；`fde_auth.json` 加 `open_api_token` 字段可覆盖）。
+
+```bash
+# 1. 查看空间目录树，选定上传落点（取目录的 id）
+python3 scripts/manage_item_wiki.py dirs --space-key Lingjizhishi
+
+# 2. 上传文件到选定目录，并自动关联到需求（--item-key 可省略则只上传不关联）
+#    不带 --parent-page-id 时会列出目录树并退出，提示选择
+python3 scripts/manage_item_wiki.py upload \
+  --space-key Lingjizhishi --parent-page-id 1742 \
+  --file ./cmcc-fde.zip --item-key G2026000S-34
+
+# 3. 查询某个需求/缺陷已关联的知识清单（返回 objectId 供取消关联用）
+python3 scripts/manage_item_wiki.py list --item-key G2026000S-34
+
+# 4. 取消关联（ objectId 来自 list 输出；只解除关联，不删知识库文件）
+python3 scripts/manage_item_wiki.py disassociate --object-id KCMHdtm6KF
+```
+
+实战案例：需求 G2026000S-34（wiki管理功能增强）的参考实现 `manage_item_wiki.py` 已传至 Lingjizhishi/操作手册（pageId=1764）并关联。
+
+### 第九步：资产中心提交候选资产（Skill 等）
+
+入口：空间内 资产管理 → 提交资产（`/fde/microportal/#/asset-center/create?spaceCode=`）。脚本复刻其两个接口：
+
+1. **文件上传** `POST /fde/moss/web/file/auth/v1/upload`：multipart `file=<文件>` + `fileType=fde_asset_02`（SKILL 主包实测值），返回 `data.fileId` 即创建报文里的 `storageKey/fileCode`。
+2. **创建资产** `POST /fde/moss/web/asset/v1/api/v1/assets/create`：JSON 报文，`head.requestId`=毫秒时间戳+随机串；`data` 含 assetName / assetType(SKILL) / versionNo / oneLiner(≤50字) / openScope(GLOBAL|ORG|SPACE|PERSONAL，实测 GLOBAL) / tags[{tagGroup:"asset_ability_type",tagValue:"tool_call"}] / files[] / units[{unitType:"PROVIDER",unitCode:"ENT_999999"}] / saveDraft / spaceCode。**成功判定 respCode=="00"（upload 才是 "000000"）**，`data`=资产ID。
+
+三种资产类型的填法差异（2026-11-20 全量实测，assetType 为 create 报文里的真实取值）：
+
+| 类型 | assetType | 必填字段 | 文件标签 | 特有选填 |
+| :--- | :--- | :--- | :--- | :--- |
+| Skill | `SKILL` | 名称/版本/一句话简介/能力类型/开放范围/文件 | SKILL.md / ZIP 文件 | 触发条件、子技能、MCP 工具 |
+| 解决方案 | `SOLUTION` | 名称/版本/一句话简介/**使用技术(多选)**/**归属行业(多选)**/开放范围/文件 | 方案包 / 文档 | 资产说明、方案优势、适用场景、落地省份/项目数量/金额/描述、目标客户、配套文件 |
+| 最佳实践 | `PRACTICE` | 同解决方案 | 实践文档 / Playbook | 同解决方案 |
+
+中文→tagValue 映射（从创建页 Vue 组件实测提取，脚本内建转换，`--tech/--industry/--scene/--ability` 均接受中文）：
+- 能力类型 `asset_ability_type`：语义理解=semantic_understand、生成文本=generate_text、多媒体处理=multimedia_process、函数调用=function_call、校验审核=verify_audit、知识问答=knowledge_qa、流程编排=process_orchestration、工具调用=tool_call、图像能力=image_ability、文件解析=file_parse、数据查询分析=data_query_analysis、代码能力=code_ability、文本理解=text_understand、文本生成=text_generate
+- 使用技术 `asset_use_technology`（25项）：数字教育=digital_edu、教育云平台=edu_cloud_platform、公共服务=public_service、智慧运维=intelligent_operation、DeepSeek=deepseek、智能组网=intelligent_network、智算=intelligent_compute、安全=security、网络=network、机器人=robot、边缘计算=edge_compute、门户集成=portal_integrate、物联网=iot、大数据=big_data、无人机=uav、BC融合=bc_fusion、三业融合=three_industry_fusion、低空经济=low_altitude_economy、车路云=car_road_cloud、信创=info_secure、工业互联网=industrial_internet、数据要素=data_element、5G=5g、视频云=video_cloud、数字人=digital_human
+- 归属行业 `asset_belong_industry`（15项）：通用场景=general_scene、连锁商业=chain_business、互联网=internet、农业文宣=agri_culture、医卫=medical_health、制造=manufacture、能源=energy、教育=education、银行=bank、交通=transportation、证券保险=securities_insurance、融合=fusion、住建=construction、政务=government、党务=party_affairs
+- 适用场景 `asset_scene`（选填，节选）：审计场景=audit_scene、巡视场景=inspect_scene、企宣场景=corp_publicity_scene、安全场景=security_scene、党建场景=party_scene、办公场景=office_scene、餐饮AI巡店=catering_ai_inspect、电商AIGC=ecommerce_aigc、零售AI巡店=retail_ai_inspect、AI客服=ai_customer_service、物联管理=iot_manage、语音/短彩信=voice_sms（完整清单在脚本 `SCENE_OPTIONS`）
+
+```bash
+# 解决方案（暂存验证）
+python3 scripts/manage_asset_submit.py submit --name "xx解决方案" --type SOLUTION \
+    --one-liner "一句话简介" --file pkg.zip --space-code G2026000S --scope SPACE \
+    --tech "DeepSeek,大数据" --industry "通用场景" --draft
+# 最佳实践（发布）
+python3 scripts/manage_asset_submit.py submit --name "xx最佳实践" --type PRACTICE \
+    --one-liner "一句话简介" --file playbook.pdf --space-code G2026000S --scope GLOBAL \
+    --tech "智算" --industry "政务"
+```
+
+已知边界：三种类型均实测创建成功（SKILL/SOLUTION/PRACTICE 各有草稿实证）；首次提交走 assets/create，草稿再次保存走 assets/edit；`type/list-tree` 接口直调报 401（映射取自页面组件而非该接口）；**能力类型标签组（asset_ability_type）仅 SKILL 有效**——SOLUTION/PRACTICE 发布时带上会报 `COMMON-4001 未知的标签组`（草稿模式不校验，脚本已改为仅 SKILL 附带）。
+
+### 第十步：资产管理（状态、生命周期与清理）
+
+资产管理入口：空间内 资产管理 列表页（`/fde/microportal/#/dev-space/workspace/<spaceCode>/asset-manage`）。
+
+**资产状态**（`assets/detail` 的 `assetStatus` / 列表状态列）：
+
+| assetStatus | UI 显示 | 含义 |
+| :--- | :--- | :--- |
+| 0 | 草稿 | 暂存未提交，仅创建人可见可编辑 |
+| 1 | 已发布 | 提交成功即此状态，全开放范围内可见 |
+
+**生命周期**：创建（assets/create，saveDraft=true→草稿 / false→直接发布）→ 草稿可在编辑页「继续编辑」后保存（assets/edit）→ 已发布为终态。**平台不提供删除能力**：
+
+- 已发布资产行内操作仅「编辑 / 下载附件」；草稿行内仅「继续编辑」。
+- `assets/delete`、`assets/offline` 接口均报 401「没有访问权限」（普通用户无此权限）。
+- 清理测试资产需联系空间/平台管理员，报资产编号（AST-YYYY-NNNN）清单。
+
+**管理常用操作**：
+
+```bash
+# 检索空间/全网资产（注意：keyword/size 筛选参数实测未生效，固定返回前 10 条，
+# 精确过滤用 python 侧对结果二次过滤或按类型分页遍历）
+python3 scripts/manage_assets.py search --keyword cmcc-fde
+python3 scripts/manage_assets.py search --type PRACTICE
+
+# 看单个资产状态/挂载文件/创建人（核对是否发布成功）
+python3 scripts/manage_assets.py detail --id <资产ID>
+
+# 全局浏览/下载统计
+python3 scripts/manage_assets.py stats
+```
+
+**实测要点**：
+- 发布成功核验：`detail` 读回 `assetStatus=1`，且列表页状态列「已发布」；仅看 create 返回 respCode=00 不够（草稿也返回成功）。
+- 已发布资产内容可改：行内「编辑」或编辑页 `/asset-center/edit/<资产ID>` 可改名称/描述/标签并重新保存，但**不能**改回草稿或删除。
+- 草稿与同名已发布资产互不影响（同空间可并存多个同名不同形态资产，靠资产编号区分）。
+- 资产 ID（雪花长数字）与资产编号（AST-YYYY-NNNN）并存：接口用前者，页面/人工沟通用后者。
+
 ---
 
 ## 实测验证与已知坑位修复记录
@@ -349,6 +501,10 @@ python3 scripts/manage_wiki.py delete --space-id 87 --doc-ids 1750,1751
 | **知识库目录树** (`manage_wiki.py tree`) | 无法获取目录内部嵌套文档 | 必须携带 `?parent=<目录ID>` 才能拉取深层节点，已新增 `--parent` 参数支持任意深度展开 |
 | **知识库数据解压** (`fde_common.py`) | 响应报乱码或解码崩溃 | 知识库网关启用 Brotli 压缩，代码已升级同时支持 Brotli 与 Gzip 自动解压缩机制 |
 | **代码令牌有效期** (`manage_token.py create`) | 前端 UI 最多只能选 20 年后 | 后端接口直接允许传入 2046 年等超长时间戳，平台数据库自动标记为 `permanent` 永久有效 |
+| **解决方案/最佳实践发布** (`manage_asset_submit.py`) | create 报 `COMMON-4001 未知的标签组` | 能力类型标签组 `asset_ability_type` 仅 SKILL 合法；SOLUTION/PRACTICE 只带 使用技术/归属行业/适用场景；草稿(saveDraft=true)不校验标签组，发布(false)才触发 |
+| **资产状态核验** (`manage_assets.py detail`) | create 返回 00 即当发布成功，实为草稿 | `assetStatus`=1 才是已发布（0=草稿）；发布类操作必须 detail 读回核验 |
+| **新建代码仓库** (`manage_repos.py create`) | UI 表单提交报文抓包 | `POST /fde-code/api/code/api/enterprises/{ent}/inner_source/projects`，payload `{name,path,description,public,owner_id,license_name,ignore,readme,enterprise_branch_plan_id:0,namespace_id:0,tag_ids:[]}`；`owner_id` 是代码子系统数字 ID（非 userId），经 `/information` 接口取顶层 `user.id`（注意不在 data 里） |
+| **代码子系统 405「登录已失效」** (`manage_repos.py` 全线) | projects/information 等报 405，资产/需求接口却正常 | 浏览器存在**多份同名 MOSS_SESSION**：登录门户签在 `sti.chinamobile.com`（path=/），代码子系统 fde-code-web 签在 `.sti.chinamobile.com`（域名点前缀），重新登录后仅部分刷新，旧值失效即 405；`fetch_browser_auth.py` 已修复按 name 去重丢 Cookie 的 bug（现保留全部同名记录按浏览器顺序拼接），遇 405 重新 fetch 即恢复 |
 
 ---
 

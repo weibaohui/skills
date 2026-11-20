@@ -14,11 +14,19 @@ FDE 知识库 (Wiki) 深度管理脚本
 import argparse
 import json
 import os
+import ssl
 import sys
 import uuid
 import urllib.request
 import urllib.error
 from fde_common import make_request, load_auth_config
+
+# 证书链含国内 CA（SHECA 等），macOS Python 默认 CA 包不含，优先用 certifi
+try:
+    import certifi
+    _SSL_CTX = ssl.create_default_context(cafile=certifi.where())
+except ImportError:
+    _SSL_CTX = ssl.create_default_context()
 
 try:
     import brotli
@@ -203,7 +211,7 @@ def download_document(doc_id: int, exp_format: str = "word", output_path: str = 
                         "x-wiki-tenant-id": WIKI_TENANT,
                         "x-auth-module": "PLATFORM"
                     })
-                    with urllib.request.urlopen(req) as resp:
+                    with urllib.request.urlopen(req, context=_SSL_CTX) as resp:
                         with open(fname, "wb") as f:
                             f.write(resp.read())
                     print(f"\n[✓] 源文件下载成功！已保存至: {os.path.abspath(fname)}\n")
@@ -228,7 +236,7 @@ def download_document(doc_id: int, exp_format: str = "word", output_path: str = 
     save_file = output_path or f"wiki_doc_{doc_id}.{ext}"
 
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=30, context=_SSL_CTX) as resp:
             raw = resp.read()
             # 校验并解压 brotli / gzip
             try:
@@ -398,7 +406,7 @@ def upload_import_file(space_id: int, file_path: str, title: str = None, parent_
     )
 
     try:
-        with urllib.request.urlopen(req, timeout=60) as resp:
+        with urllib.request.urlopen(req, timeout=60, context=_SSL_CTX) as resp:
             text = resp.read().decode("utf-8")
             res = json.loads(text)
             if res.get("code") == 0:
@@ -420,10 +428,17 @@ def upload_import_file(space_id: int, file_path: str, title: str = None, parent_
 def delete_documents(space_id: int, doc_ids: list):
     print(f"[*] 正在从空间 ID={space_id} 批量删除文档: {doc_ids}...")
     res = make_request("DELETE", f"/fde-wiki/api/wiki/spaces/{space_id}/pages/batch", data={"pageIds": doc_ids}, custom_headers=_get_wiki_headers())
-    if res.get("code") == 0:
-        print(f"[✓] 成功删除 {len(doc_ids)} 个文档: {doc_ids}")
-    else:
+    if res.get("code") != 0:
         print(f"[x] 删除文档失败: {res}")
+        return
+    # 接口返回逐项结果，外层 code=0 不代表每项都删掉了（如 6010 无权限）
+    ok, failed = [], []
+    for item in res.get("data") or []:
+        (ok if item.get("success") else failed).append((item.get("pageId"), item.get("message") or ""))
+    if ok:
+        print(f"[✓] 成功删除 {len(ok)} 个: {[p for p, _ in ok]}")
+    if failed:
+        print(f"[x] 删除失败 {len(failed)} 个: " + ", ".join(f"{p}({m})" for p, m in failed))
 
 def main():
     parser = argparse.ArgumentParser(description="FDE 知识库 (Wiki) 深度管理脚本")

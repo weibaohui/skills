@@ -14,6 +14,11 @@ FDE 首次登录凭证自动采集脚本（浏览器 cookie + MOSS-TOKEN）
 登录为短信 + 图形验证码，需人工在浏览器窗口完成，本脚本只负责「打开页面、
 等待人工登录、采集凭证」，不猜测/绕过任何凭据。
 
+【唯一登录入口】本脚本只会打开 FDE 统一登录页：
+  https://sti.chinamobile.com/fde/micrologin/#/login
+不得改为 /moss/microhome 等其它地址（那是登录后的落地页，直接打开会导致登录态异常）。
+凭证采集阶段也只从当前已登录页面读取 Cookie，不额外弹出需求/代码等子系统页面。
+
 用法:
   # 1. 打开登录页（daemon 未启动会自动拉起），人工登录后保持窗口
   python3 fetch_browser_auth.py open
@@ -44,7 +49,9 @@ PW_SKILL_DIR = os.environ.get(
 PW_CLI = os.path.join(PW_SKILL_DIR, "pw-browser.js")
 NODE_MODULES = os.path.join(PW_SKILL_DIR, "node_modules")
 
-FDE_HOME_URL = "https://sti.chinamobile.com/moss/microhome/#/home"
+# 【唯一登录入口】FDE 统一登录页。脚本只会打开这一个地址，切勿改成 microhome
+# 或其它子系统页面（那些是登录成功后的落地页，不是登录页，直接打开会导致登录态异常）。
+FDE_LOGIN_URL = "https://sti.chinamobile.com/fde/micrologin/#/login"
 WORKBENCH_URL = "https://sti.chinamobile.com/fde/microportal/#/workbench"
 
 # 采集脚本：在浏览器 sessionStorage 中定位 MOSS-TOKEN 等凭证
@@ -143,26 +150,33 @@ def _start_daemon() -> bool:
 
 
 def cmd_open() -> None:
-    """打开 FDE 首页（未登录会自动跳登录页）。"""
+    """仅打开 FDE 统一登录页（唯一允许弹出的页面地址）。"""
     if not _start_daemon():
         sys.exit(1)
-    print(f"[*] 正在打开 FDE 平台: {FDE_HOME_URL}")
-    r = _pw("open", FDE_HOME_URL, timeout=60)
+    print(f"[*] 正在打开 FDE 统一登录页: {FDE_LOGIN_URL}")
+    r = _pw("open", FDE_LOGIN_URL, timeout=60)
     if not r.get("ok"):
         print(f"[x] 打开页面失败: {r.get('error')}", file=sys.stderr)
         sys.exit(1)
     print(f"[✓] 已打开: {r.get('afterUrl') or r.get('data', {}).get('afterUrl', '')}")
     print("[提示] 请在打开的 Chrome 窗口中完成登录（手机号 + 图形验证码 + 短信动态密码）。")
     print("       登录成功进入工作台后，运行: python3 fetch_browser_auth.py fetch")
+    print(f"[约束] 本脚本只弹出登录页 {FDE_LOGIN_URL}，不会打开其它子系统页面。")
 
 
 def _read_browser_creds() -> Optional[Dict[str, Any]]:
     """从浏览器读取 Cookie + sessionStorage 凭证，返回结构化 dict。"""
     # 1) Cookie
+    # ponytail: 严禁按 name 去重——平台会在同域名下发两份同名 MOSS_SESSION
+    # （sti.chinamobile.com 与 .sti.chinamobile.com 各一条，2026-11-20 实测），
+    # 去重会把另一条弄丢，导致 fde-code 子系统 405「登录已失效」。
     ck = _pw("cookies", "list", "--json", timeout=20)
     cookies = ck.get("cookies", []) if isinstance(ck, dict) else []
-    cookie_map = {c.get("name"): c.get("value", "") for c in cookies}
-    cookie_str = "; ".join(f"{k}={v}" for k, v in cookie_map.items())
+    # 保留全部记录（含同名不同域），按浏览器实际顺序拼接，保证与页面请求头一致
+    cookie_str = "; ".join(f"{c.get('name')}={c.get('value', '')}" for c in cookies)
+    # 供展示/落库用的主会话值：优先取裸域那条（登录门户签发），取不到取最后一条
+    moss_vals = [c.get("value", "") for c in cookies if c.get("name") == "MOSS_SESSION"]
+    moss_session = moss_vals[0] if moss_vals else ""
 
     # 2) sessionStorage 里的 MOSS-TOKEN 等
     rc = _pw("run-code", EXTRACT_JS, timeout=20)
@@ -176,7 +190,6 @@ def _read_browser_creds() -> Optional[Dict[str, Any]]:
     except (json.JSONDecodeError, TypeError):
         s = {}
 
-    moss_session = cookie_map.get("MOSS_SESSION", "")
     moss_token = s.get("moss_token", "")
     return {
         "cookie": cookie_str,
@@ -260,13 +273,11 @@ def cmd_fetch(wait_seconds: int) -> None:
     save_auth_config(save_payload)
     print("[✓] Cookie / MOSS-TOKEN / 刷新令牌等凭证已写入 fde_auth.json（三处）。")
 
-    # 自动预热子系统并采集需求/研发空间等子模块专属 Token
-    print("[*] 正在自动预热子应用并采集子模块专属 Token (需求管理/代码/研发空间)...")
+    # 从当前已登录页面读取全部 Cookie（不额外打开任何子系统页面）。
+    # 注意：需求子系统 sessionToken 已由 fde_common.get_req_session_token() 本地身份生成，
+    # 不再依赖浏览器预热；此处仅顺带收集浏览器内已有的 sessionToken 作为冗余备份。
+    print("[*] 正在从当前页面采集 Cookie 与子模块凭证（不弹出其它页面）...")
     try:
-        req_board_url = "https://sti.chinamobile.com/fde/base/fde-req-web/#/workspace/boards/req"
-        _pw("open", req_board_url, timeout=30)
-        time.sleep(3)
-        sub_creds = _read_browser_creds()
         sub_ck = _pw("cookies", "list", "--json", timeout=20)
         sub_cookies = sub_ck.get("cookies", []) if isinstance(sub_ck, dict) else []
         sub_map = {c.get("name"): c.get("value", "") for c in sub_cookies}
@@ -277,9 +288,11 @@ def cmd_fetch(wait_seconds: int) -> None:
                 "req_session_token": session_token,
                 "cookie": "; ".join(f"{k}={v}" for k, v in sub_map.items())
             })
-            print("[✓] 需求子模块专用 sessionToken 采集成功！已自动写入配置。")
+            print("[✓] 浏览器内 sessionToken 已采集并写入配置（冗余备份）。")
+        else:
+            print("[-] 当前页面无 sessionToken（需求 token 本地生成，不影响功能）。")
     except Exception as e:
-        print(f"[-] 子应用预热提示: {e} (不影响主功能)")
+        print(f"[-] 子模块凭证采集提示: {e} (不影响主功能)")
 
     # 调用 auth_login.py --check 校验身份并补全 enterpriseId/userId 等字段
     script_dir = os.path.dirname(os.path.abspath(__file__))

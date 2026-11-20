@@ -14,6 +14,7 @@ FDE 代码仓库深度管理脚本
 import argparse
 import json
 import sys
+from urllib.parse import quote
 from fde_common import make_request, load_auth_config
 
 def resolve_repo_full_path(identifier: str) -> str:
@@ -203,8 +204,16 @@ def get_clone_info(target: str):
     auth = load_auth_config()
     token = auth.get("private_token", "")
 
-    http_url = f"https://sti.chinamobile.com/fde-code-web/{full_path}.git"
-    auth_clone_cmd = f"git clone https://oauth2:{token}@{http_url.replace('https://', '')}" if token else f"git clone {http_url}"
+    # Git HTTP 真实入口为 /fde/code/<full_path>.git（2026-11-20 实测确认）。
+    # 用户名用 SSO 登录账号（实测 oauth2 亦可，服务端只认 Token、不校验用户名）。
+    # SSO 账号含 @ 等字符，必须 URL 编码，否则 git 会误把 @ 解析为 user@host 分隔符。
+    sso_user = auth.get("username") or "oauth2"
+    quoted_user = quote(sso_user, safe="")
+    http_url = f"https://sti.chinamobile.com/fde/code/{full_path}.git"
+    auth_clone_cmd = (
+        f"git clone https://{quoted_user}:{token}@sti.chinamobile.com/fde/code/{full_path}.git"
+        if token else f"git clone {http_url}"
+    )
 
     print("\n" + "=" * 65)
     print(f"【代码仓库克隆指南】: {full_path}")
@@ -214,6 +223,53 @@ def get_clone_info(target: str):
     print("\n使用当前已配置 Token 一键免密克隆命令:")
     print(f"  {auth_clone_cmd}")
     print("=" * 65 + "\n")
+
+def get_code_user_id() -> int:
+    """解析当前用户在代码子系统里的数字 owner_id（/information 接口，2026-11-20 实测 id=79604）。
+    注意：该接口响应顶层就是 {"user": {...}}，不在 data 里。"""
+    auth = load_auth_config()
+    enterprise_id = auth.get("enterpriseId", "ENT_999999")
+    res = make_request(
+        "GET",
+        f"/fde/moss/web/fde-code/api/code/api/enterprises/{enterprise_id}/information",
+        params={"program_uuid": ""},
+        custom_headers={"x-auth-module": "PLATFORM"}
+    )
+    user = res.get("user") or {}
+    if not user.get("id"):
+        print(f"[x] 解析代码子系统用户 ID 失败: {json.dumps(res, ensure_ascii=False)[:200]}")
+        sys.exit(1)
+    return user["id"]
+
+
+def create_repository(name: str, path: str, description: str = "", public: bool = False,
+                      readme: bool = True, license_name: str = "", ignore: str = ""):
+    """新建代码仓库。报文抓自 UI /fde/base/fde-code-web/new 提交（2026-11-20）：
+    POST /fde/moss/web/fde-code/api/code/api/enterprises/{ent}/inner_source/projects
+    {"name","path","description","public","owner_id","license_name","ignore","readme",
+     "enterprise_branch_plan_id":0,"namespace_id":0,"tag_ids":[]}"""
+    auth = load_auth_config()
+    enterprise_id = auth.get("enterpriseId", "ENT_999999")
+    owner_id = get_code_user_id()
+    payload = {
+        "name": name, "path": path, "description": description, "public": public,
+        "owner_id": owner_id, "license_name": license_name, "ignore": ignore,
+        "readme": readme, "enterprise_branch_plan_id": 0, "namespace_id": 0, "tag_ids": [],
+    }
+    res = make_request(
+        "POST",
+        f"/fde/moss/web/fde-code/api/code/api/enterprises/{enterprise_id}/inner_source/projects",
+        data=payload,
+        custom_headers={"x-auth-module": "PLATFORM"}
+    )
+    if res.get("error") or (res.get("head") or {}).get("respStatus") not in (None, "00", "000000"):
+        print(f"[x] 创建失败: {json.dumps(res, ensure_ascii=False)[:300]}")
+        sys.exit(1)
+    d = res.get("data") or res
+    print(f"[✓] 代码仓库已创建: {d.get('name')}  ID={d.get('id')}  full_path={d.get('full_path', path)}")
+    print(f"    可见性: {'企业内部开源' if public else '私有'}  README初始化: {'是' if readme else '否'}")
+    return d
+
 
 def main():
     parser = argparse.ArgumentParser(description="FDE 代码仓库深度管理工具")
@@ -250,6 +306,15 @@ def main():
 
     # clone-info
     info_p = subparsers.add_parser("clone-info", help="查看仓库免密克隆命令")
+    # create
+    create_p = subparsers.add_parser("create", help="新建代码仓库（复刻 UI 新建代码仓库表单）")
+    create_p.add_argument("--name", required=True, help="仓库名称")
+    create_p.add_argument("--path", required=True, help="仓库路径（URL 标识）")
+    create_p.add_argument("--desc", default="", help="仓库简介")
+    create_p.add_argument("--public", action="store_true", help="企业内部开源（默认私有）")
+    create_p.add_argument("--no-readme", action="store_true", help="不使用 Readme 初始化")
+    create_p.add_argument("--license", dest="license_name", default="", help="开源许可证名称")
+    create_p.add_argument("--gitignore", dest="ignore", default="", help=".gitignore 模板名")
     info_p.add_argument("--path", type=str, required=True, help="仓库完整路径或数字 ID")
 
     args = parser.parse_args()
@@ -268,6 +333,9 @@ def main():
         list_members(args.path)
     elif args.command == "clone-info":
         get_clone_info(args.path)
+    elif args.command == "create":
+        create_repository(args.name, args.path, args.desc, args.public,
+                          not args.no_readme, args.license_name, args.ignore)
     else:
         parser.print_help()
 

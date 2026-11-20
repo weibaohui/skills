@@ -14,6 +14,7 @@
 """
 
 import json
+from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
 from fde_common import make_request
@@ -32,6 +33,9 @@ PRIORITY_UUID = {
     "p4": "fef17446-412d-43c9-8cd6-b73deb999010",
     "p5": "805b0a86-12d5-49d3-b91f-420832e1d0a4",
 }
+
+# 日期字段: 存毫秒时间戳, 网关口径为当天 00:00:00 (UTC+8)
+DATE_FIELDS = {"PlanStartTime", "PlanFinishTime", "finishAt", "inProgressAt", "requestSubmissionTime"}
 
 # 富文本字段 (Slate 数组)
 RICH_TEXT_FIELDS = {
@@ -61,7 +65,9 @@ FIELD_ALIASES = {
     "description": "requirement", "requirement": "requirement",
     "复现步骤": "StepReproduce", "stepreproduce": "StepReproduce",
     "验收标准": "acceptanceCriteria", "acceptancecriteria": "acceptanceCriteria",
-    "负责人": "assignee", "处理人": "assignee", "assignee": "assignee",
+    "负责人": "assignee", "责任人": "assignee", "assignee": "assignee",
+    "处理人": "flowHandler", "流程处理人": "flowHandler", "flowhandler": "flowHandler",
+    "当前处理人": "ItemHandler", "itemhandler": "ItemHandler",
     "关注人": "watchers", "关注": "watchers", "watchers": "watchers",
     "提出人": "proposer", "proposer": "proposer",
     "验证者": "verifier", "verifier": "verifier",
@@ -230,6 +236,19 @@ def convert_value(field: str, raw: str, h: Dict[str, str],
             except Exception:
                 pass
         return "values", _split_multi(raw), "字符串数组"
+
+    # 日期字段: YYYY-MM-DD (或带时间) → 毫秒时间戳 (网关口径当天 00:00 UTC+8)
+    if field in DATE_FIELDS:
+        s = raw.strip()
+        if s.isdigit():
+            return "values", int(s), "毫秒时间戳"
+        for fmt in ("%Y-%m-%d", "%Y/%m/%d", "%Y-%m-%d %H:%M:%S"):
+            try:
+                dt = datetime.strptime(s, fmt).replace(tzinfo=timezone(timedelta(hours=8)))
+                return "values", int(dt.timestamp() * 1000), "%s→时间戳" % fmt
+            except ValueError:
+                continue
+        raise ValueError("无法解析日期 %s (应为 YYYY-MM-DD, 如 2026-11-27)" % raw)
 
     # 其它字段: 尝试 JSON 解析, 否则按字符串 (写入 values)
     stripped = raw.strip()
